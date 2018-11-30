@@ -15,7 +15,7 @@ Before I start with the example I would like to recall what all this Hive thingy
 Hive is essentially a tool in the Hadoop ecosystem that is used to query data stored in HDFS.
 HDFS stands for Hadoop Distributed Filesystem.
 The use of Hadoop is to store large amounts of data that would be expensive and inefficient on traditional databases.
-Hadoop is able to do that because the data can be stored on different machines. Thus the word distributed in HDFS.
+Hadoop is able to do that because the data can be stored on multiple machines. Thus the word distributed in HDFS.
 Lastly Hadoop stores data in the form of files. 
 To query a traditional database, we use a language called SQL.
 We can query data in the HDFS using this tool called Hive that has a familiar syntax to SQL.<br>
@@ -24,9 +24,9 @@ We can query data in the HDFS using this tool called Hive that has a familiar sy
 
 **Set up HDFS and Hive**<br>
 I tried downloading the hortonworks sandbox but my laptop did not have enough RAM to run it properly.
-Then I found I could try Hive by using the free trial version on Microsoft azure portal.
+Then I found that I could try Hive by using the free trial version on Microsoft azure portal.
 We have to create a hadoop cluster using HDInsight [hdinsight link][hdinsight-link]
-Then we can run Hive queries on the cluster dashboard or if we have gitbash in windows, we can run go to 
+Then we can run Hive queries on the cluster dashboard or if we have gitbash in windows, we can go to 
 *HDInsight resource group > Settings > SSH + Cluster login*. And copy paste into gitbash the ssh command under *Connect to cluster using secure shell (SSH)*
 
 Connect through ssh: ``ssh sshuser@exercisebook-ssh.azurehdinsight.net``<br>
@@ -37,11 +37,11 @@ Start Hive: ``beeline -u 'jdbc:hive2://localhost:10001/;transportMode=http'``<br
 Quit Hive: ``!quit``
 
 **Get data**<br>
-I went to this [data-link][data-link] provided by the youtube video's git, and saved it in my local as orders.csv.
+I went to this [data-link][data-link] provided by the youtube video's github, and saved it in my local as orders.csv.
 Then I connected using Winscp to the azure platform using hostname as found in
 *HDInsight resource group > Settings > SSH + Cluster login > Hostname*, username as sshuser and my password.
 After connection, I transferred the orders.csv file to the azure platform server.
-When I issue *ls* in the gitbash, I now see the orders.csv file.<br>
+When I issue *ls* in gitbash, I now see the orders.csv file.<br>
 
 
 See the first 10 records: ``head orders.csv``<br>
@@ -83,9 +83,9 @@ If we go to that directory, we see it is empty as no table has been loaded.<br>
 Next we specify the schema of this table by issuing a create table statement.
 The schema has to match the data in HDFS or else we will get nulls.
 Hive is schema on read, so when we load the data, even though the schema does not match, the load will work.
-However when we read it, we will get nulls as the schema does not match.
+However when we read/query it, we will get nulls as the schema does not match.
 
-Now we create the external table orders_external. We have to specify the directory of the file in HDFS in *location*.
+Now we create the external table orders_external. We have to specify the directory of the file in HDFS in *location* keyword.
 Also, if there are more than 1 file in that directory, all of them have to have matching schema to the create statement in Hive.
 The external table will contain data from all the files in that directory.
 <br>
@@ -101,14 +101,16 @@ ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 LOCATION '/user/root/staging/financial';
 {% endhighlight %}
 
-In conclusion, we are now able to query data stored in HDFS using Hive. 
+In conclusion, we are now able to query data stored in HDFS using Hive.  We can also see the create table statement that was used to create a Hive table
+using the show create table command.
 {% highlight hive %}
 select * from orders_external limit 5;
 describe formatted financials.orders_external;
+show create table financials.orders_external;
 {% endhighlight %}
 
 
-If we now add another file to that HDFS directory */user/root/staging/financial*, when we select count of the Hive external table *orders_external*
+If we now add the same file to that HDFS directory */user/root/staging/financial*, when we select count of the Hive external table *orders_external*
 , we will have twice the number of rows.<br>
 This is because the Hive external table is pointing to that directory.<br>
 Make copy of file: 
@@ -122,7 +124,7 @@ If we go to the Hive warehouse directory, we see it is still empty as the Hive e
 
 **Hive managed table**<br>
 If the data is not in HDFS, we can also create a Hive table and load data into it directly. Or if the data is in HDFS and we want to create a Hive table 
-that will have ownership of this data, we can create a Hive table. These tables are called managed table. If we don't specify external keyword 
+that will have ownership of this data, we can create a Hive table. These tables are called managed tables. If we don't specify external keyword 
 in the create table command, it would a be Hive managed table.
 When we drop Hive managed table, both metadata and data would be gone.
 
@@ -143,7 +145,7 @@ describe formatted financials.categories;
 {% endhighlight %}
 
 If we go to ``hadoop fs -ls /hive/warehouse/financials.db/categories``, nothing is returned as no data is loaded.
-Now we load data into the table categories from local. We can load from another HDFS directory by dropping the *local* keyword. But this will move not copy the file.
+Now we load data into the table categories from local. We can also load from another HDFS directory by dropping the *local* keyword. But this will move not copy the file.
 (File in original HDFS directory will be gone)
  
 {% highlight hive %}
@@ -184,15 +186,15 @@ alter table orders_part add partition(order_month='2014-02');
 
 If we go to ``hadoop fs -ls /hive/warehouse/financials.db/orders_part``, we can see a subdirectory *order_month=2014-02*.
 It is currently empty.
-We can add data by querying the existing orders_external file:
-We can add overwrite keyword to override table.
+We can add data by querying the existing orders_external table.
+We can use *overwrite* keyword instead of *into* to overwrite table.
 {% highlight hive %}
 INSERT into TABLE orders_part
 partition(order_month='2014-02')
 select * from  financials.orders_external where substr(order_date,1,7) ='2014-02';
 {% endhighlight %}
 
-We can also add from local:
+We can also add data from local:
 {% highlight hive %}
 LOAD DATA LOCAL INPATH '/home/sshuser/orders_201402.csv'
 into table financial.orders_part
@@ -200,7 +202,7 @@ partition(order_month='2014-02');
 {% endhighlight %}
 <br>
 
-Another way is to creat partitions dynamically.
+Another way is to create partitions dynamically.
 This means all the distinct values of the partition column will automatically be translated into different subdirectories.
 The last column in the select statement will be used as the partition column. (We used a different name order_mth to test)
 {% highlight hive %}
@@ -212,6 +214,7 @@ show partitions financials.orders_part;
 {% endhighlight %}
 If we go to ``hadoop fs -ls /hive/warehouse/financials.db/orders_part``, we can see multiple subdirectories *order_month=2013-07*
 to *order_month=2014-07*. The partitions have been created dynamically.
+When we query the table orders_part, it will behave as 1 table even though the data are in different subdirectories.
 <br>
 <br>
 
@@ -236,12 +239,12 @@ To add the partition we issue:
 {% highlight hive %}
 ALTER TABLE orders_part ADD PARTITION(month='2014-07')
 location '/user/root/staging/financial/orders/2014/07';
-{% endhighlight %}
+{% endhighlight %}<br>
 
 For dynamic partitioning to work, we need to ensure hive.exec.dynamic.partition=true and
 hive.exec.dynamic.partition.mode=nonstrict.
-In conclusion, we have seen how Hive can be used to query tables in Hadoop. The differences between external and managed tables.
-And partitioned tables. Next we will explore how Hive can be used in data transformations, joins and how it is used in the 
+In conclusion, we have seen how Hive can be used to query tables in Hadoop, the differences between external and managed tables
+and partitioned tables. Next we will explore how Hive can be used in data transformations, joins and how it is used in the 
 data infrastructure of various companies.
 
 [hive-video]: https://www.youtube.com/watch?v=5Hrhr1H4IQ0&list=PLf0swTFhTI8o6PhuwMO6rx4-m3CnZ7uBp&index=8
