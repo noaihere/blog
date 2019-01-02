@@ -146,7 +146,7 @@ if __name__ == '__main__':
 {% endhighlight %}
 <br><br>
 
-<img src="/img/linechart.jpg" class ='img-responsive'><br>
+<img src="https://raw.githubusercontent.com/noaihere/blog/gh-pages/img/linechart.JPG" class ='img-responsive'><br>
 The chart contains 2 lines in 1 chart with a header 'hello guys' and 'today is friday' below it.<br>
 
 **sgparkwhere layout**<br>
