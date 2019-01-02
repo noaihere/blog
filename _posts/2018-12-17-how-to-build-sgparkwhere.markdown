@@ -215,7 +215,7 @@ if __name__ == '__main__':
     app.run_server(debug=True)
 {% endhighlight %}
 <br>
-<img src="/img/filter.jpg" class ='img-responsive'><br>
+<img src="https://github.com/noaihere/blog/blob/gh-pages/img/filter.JPG" class ='img-responsive'><br>
 The code above is adapted from the datatable link above.
 When you choose a state in the dropdown, the table is filtered to show only data belonging to that state.<br>
 
